@@ -1,10 +1,32 @@
+@use '@carbon/colors';
 @use '@carbon/layout';
+@use '@openmrs/esm-styleguide/src/vars' as *;
 
 .statusContainer {
   display: flex;
   align-items: center;
+  gap: layout.$spacing-02;
+  font-size: 0.875rem;
 
   svg {
-    margin-right: layout.$spacing-03;
+    flex-shrink: 0;
+  }
+
+  // In-service / In-progress — blue teal
+  &[data-status-icon='InProgress'] {
+    color: $interactive-01;
+
+    svg {
+      fill: $interactive-01;
+    }
+  }
+
+  // Waiting with group — amber
+  &[data-status-icon='Group'] {
+    color: colors.$orange-60;
+
+    svg {
+      fill: colors.$orange-60;
+    }
   }
 }
