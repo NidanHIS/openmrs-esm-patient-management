@@ -1,0 +1,40 @@
+@use '@carbon/layout';
+@use '@openmrs/esm-styleguide/src/vars' as *;
+
+.patientCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.patientName {
+  font-weight: 600;
+  color: var(--cds-link-primary, #0f62fe);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+    color: var(--cds-link-primary-hover, #0043ce);
+  }
+}
+
+.patientMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: $text-02;
+}
+
+.patientId {
+  font-weight: 500;
+}
+
+.separator {
+  color: $text-03;
+  font-size: 0.6875rem;
+}
+
+.genderAge {
+  color: $text-03;
+}

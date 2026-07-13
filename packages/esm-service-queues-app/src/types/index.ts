@@ -399,6 +399,7 @@ export interface QueueEntrySearchCriteria {
   status?: Array<string> | string;
   isEnded: boolean;
   patient?: string;
+  providerWaitingFor?: string;
 }
 
 // TODO: The follow types match the types from backend.

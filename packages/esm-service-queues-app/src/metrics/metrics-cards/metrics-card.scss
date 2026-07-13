@@ -5,21 +5,48 @@
 
 .tileContainer {
   border: 1px solid $ui-03;
-  min-height: 7.875rem;
+  border-radius: 6px;
+  background-color: $ui-01;
+  min-height: 4.8rem;
   height: 100%;
-  padding: layout.$spacing-05;
+  padding: layout.$spacing-03;
+  transition:
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    border-color: $interactive-01;
+  }
+
+  // Premium subtle top bar indicator
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, $interactive-01 0%, colors.$blue-50 100%);
+    opacity: 0.8;
+    transition: opacity 0.25s ease-in-out;
+  }
 }
 
 .tileHeader {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: layout.$spacing-03;
+  align-items: center;
+  margin-bottom: layout.$spacing-02;
 }
 
 .headerLabelContainer {
   display: flex;
-  height: layout.$spacing-07;
+  height: layout.$spacing-05;
   align-items: center;
 
   :global(.cds--dropdown__wrapper--inline) {
@@ -51,6 +78,7 @@
 .headerLabel {
   @include type.type-style('heading-compact-01');
   color: $text-02;
+  font-weight: 600;
 }
 
 .metricsContainer {
@@ -61,19 +89,20 @@
 }
 
 .metricItem {
-  display: inline-block;
+  display: flex;
   flex-direction: column;
 }
 
 .metricLabel {
   @include type.type-style('label-01');
   color: $text-02;
-  margin-bottom: layout.$spacing-02;
+  margin-bottom: layout.$spacing-01;
 }
 
 .metricValue {
   @include type.type-style('heading-04');
   color: $ui-05;
+  font-weight: 700;
   margin: 0;
 }
 

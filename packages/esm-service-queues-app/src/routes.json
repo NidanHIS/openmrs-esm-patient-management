@@ -85,6 +85,24 @@
       "order": 3
     },
     {
+      "name": "metrics-card-active-patients",
+      "component": "metricsCardActivePatients",
+      "slot": "service-queues-metrics-slot",
+      "order": 4
+    },
+    {
+      "name": "metrics-card-todays-patients",
+      "component": "metricsCardTodaysPatients",
+      "slot": "service-queues-metrics-slot",
+      "order": 5
+    },
+    {
+      "name": "metrics-card-my-patients",
+      "component": "metricsCardMyPatients",
+      "slot": "service-queues-metrics-slot",
+      "order": 6
+    },
+    {
       "name": "queue-screen-link",
       "component": "queueScreenLink",
       "slot": "app-menu-slot",

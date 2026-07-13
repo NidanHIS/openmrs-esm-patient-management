@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { DataTableSkeleton, Dropdown, Layer, TableToolbarSearch } from '@carbon/react';
 import { useTranslation } from 'react-i18next';
-import { isDesktop, showSnackbar, useLayoutType } from '@openmrs/esm-framework';
+import { isDesktop, showSnackbar, useLayoutType, useSession } from '@openmrs/esm-framework';
+import dayjs from 'dayjs';
+import isToday from 'dayjs/plugin/isToday';
 import { updateSelectedQueueStatus, useServiceQueuesStore } from '../store/store';
 import { useColumns } from './cells/columns.resource';
 import { useQueueEntries } from '../hooks/useQueueEntries';
@@ -12,32 +14,52 @@ import QueueTable from './queue-table.component';
 import QueueTableExpandedRow from './queue-table-expanded-row.component';
 import styles from './queue-table.scss';
 
-function DefaultQueueTable() {
+dayjs.extend(isToday);
+
+interface DefaultQueueTableProps {
+  filterType?: 'active' | 'today' | 'my-patients';
+}
+
+function DefaultQueueTable({ filterType = 'active' }: DefaultQueueTableProps) {
   const { t } = useTranslation();
   const layout = useLayoutType();
+
+  const title = useMemo(() => {
+    switch (filterType) {
+      case 'today':
+        return t('todaysPatients', "Today's patients");
+      case 'my-patients':
+        return t('myPatients', 'My patients');
+      case 'active':
+      default:
+        return t('patientsCurrentlyInQueue', 'Patients currently in queue');
+    }
+  }, [filterType, t]);
 
   return (
     <div className={styles.defaultQueueTable}>
       <Layer className={styles.tableSection}>
         <div className={styles.headerContainer}>
           <div className={!isDesktop(layout) ? styles.tabletHeading : styles.desktopHeading}>
-            <h2>{t('patientsCurrentlyInQueue', 'Patients currently in queue')}</h2>
+            <h2>{title}</h2>
           </div>
           <div className={styles.headerButtons}>
             <AddPatientToQueueButton />
           </div>
         </div>
-        <QueueTableSection />
+        <QueueTableSection filterType={filterType} />
       </Layer>
     </div>
   );
 }
 
-function QueueTableSection() {
+function QueueTableSection({ filterType }: { filterType: 'active' | 'today' | 'my-patients' }) {
   const { t } = useTranslation();
   const layout = useLayoutType();
   const { selectedServiceUuid, selectedQueueLocationUuid, selectedQueueStatusUuid } = useServiceQueuesStore();
   const [searchTerm, setSearchTerm] = useState('');
+  const session = useSession();
+  const currentProviderUuid = session?.currentProvider?.uuid;
 
   const searchCriteria = useMemo(() => {
     return {
@@ -45,8 +67,11 @@ function QueueTableSection() {
       location: selectedQueueLocationUuid,
       isEnded: false,
       status: selectedQueueStatusUuid,
+      ...(filterType === 'my-patients' && {
+        providerWaitingFor: currentProviderUuid || '00000000-0000-0000-0000-000000000000',
+      }),
     };
-  }, [selectedServiceUuid, selectedQueueLocationUuid, selectedQueueStatusUuid]);
+  }, [selectedServiceUuid, selectedQueueLocationUuid, selectedQueueStatusUuid, filterType, currentProviderUuid]);
 
   const { queueEntries, isLoading, error, isValidating } = useQueueEntries(searchCriteria);
 
@@ -72,14 +97,20 @@ function QueueTableSection() {
   }, [columns, t]);
 
   const filteredQueueEntries = useMemo(() => {
+    let result = queueEntries ?? [];
+
+    if (filterType === 'today') {
+      result = result.filter((entry) => entry.startedAt && dayjs(entry.startedAt).isToday());
+    }
+
     const searchTermLowercase = searchTerm.toLowerCase();
-    return queueEntries?.filter((queueEntry) => {
+    return result.filter((queueEntry) => {
       return columns?.some((column) => {
         const columnSearchTerm = column.getFilterableValue?.(queueEntry)?.toLocaleLowerCase();
         return columnSearchTerm?.includes(searchTermLowercase);
       });
     });
-  }, [columns, queueEntries, searchTerm]);
+  }, [columns, queueEntries, searchTerm, filterType]);
 
   if (isLoading) {
     return <DataTableSkeleton role="progressbar" />;

@@ -63,6 +63,21 @@ export const metricsCardAverageWaitTime = getAsyncLifecycle(
   options,
 );
 
+export const metricsCardActivePatients = getAsyncLifecycle(
+  () => import('./metrics/metrics-cards/active-patients.extension'),
+  options,
+);
+
+export const metricsCardTodaysPatients = getAsyncLifecycle(
+  () => import('./metrics/metrics-cards/todays-patients.extension'),
+  options,
+);
+
+export const metricsCardMyPatients = getAsyncLifecycle(
+  () => import('./metrics/metrics-cards/my-patients.extension'),
+  options,
+);
+
 export const callQueueEntryModal = getAsyncLifecycle(() => import('./modals/call-modal/call-queue-entry.modal'), {
   featureName: 'call queue entry',
   moduleName,
