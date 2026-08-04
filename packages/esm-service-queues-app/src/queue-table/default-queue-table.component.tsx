@@ -21,32 +21,9 @@ interface DefaultQueueTableProps {
 }
 
 function DefaultQueueTable({ filterType = 'active' }: DefaultQueueTableProps) {
-  const { t } = useTranslation();
-  const layout = useLayoutType();
-
-  const title = useMemo(() => {
-    switch (filterType) {
-      case 'today':
-        return t('todaysPatients', "Today's patients");
-      case 'my-patients':
-        return t('myPatients', 'My patients');
-      case 'active':
-      default:
-        return t('patientsCurrentlyInQueue', 'Patients currently in queue');
-    }
-  }, [filterType, t]);
-
   return (
     <div className={styles.defaultQueueTable}>
       <Layer className={styles.tableSection}>
-        <div className={styles.headerContainer}>
-          <div className={!isDesktop(layout) ? styles.tabletHeading : styles.desktopHeading}>
-            <h2>{title}</h2>
-          </div>
-          <div className={styles.headerButtons}>
-            <AddPatientToQueueButton />
-          </div>
-        </div>
         <QueueTableSection filterType={filterType} />
       </Layer>
     </div>
@@ -124,9 +101,7 @@ function QueueTableSection({ filterType }: { filterType: 'active' | 'today' | 'm
       queueUuid={null}
       statusUuid={null}
       tableFilters={
-        <>
-          {filteredQueueEntries?.length > 0 && <ClearQueueEntries queueEntries={filteredQueueEntries} />}
-          <StatusDropdownFilter />
+        <div className={styles.tableFilters}>
           <TableToolbarSearch
             className={styles.search}
             onChange={(e) => {
@@ -141,7 +116,14 @@ function QueueTableSection({ filterType }: { filterType: 'active' | 'today' | 'm
             size={isDesktop(layout) ? 'sm' : 'lg'}
             persistent
           />
-        </>
+          <div className={styles.filterActionsGroup}>
+            <StatusDropdownFilter />
+            {filteredQueueEntries?.length > 0 && <ClearQueueEntries queueEntries={filteredQueueEntries} />}
+            <div className={styles.addPatientButton}>
+              <AddPatientToQueueButton />
+            </div>
+          </div>
+        </div>
       }
     />
   );
@@ -165,7 +147,7 @@ function StatusDropdownFilter() {
         label={selectedQueueStatusDisplay ?? t('all', 'All')}
         onChange={handleStatusChange}
         size={isDesktop(layout) ? 'sm' : 'lg'}
-        titleText={t('showPatientsWithStatus', 'Show patients with status:')}
+        titleText={t('showPatientsWithStatus', 'Status:')}
         type="inline"
       />
     </div>

@@ -1,7 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { User } from '@carbon/react/icons';
 import { useSession } from '@openmrs/esm-framework';
-import { MetricsCard, MetricsCardHeader, MetricsCardBody, MetricsCardItem } from './metrics-card.component';
+import { MetricsCard } from './metrics-card.component';
 import { useQueueEntries } from '../../hooks/useQueueEntries';
 import { useServiceQueuesStore } from '../../store/store';
 
@@ -18,14 +19,11 @@ export default function MyPatientsExtension() {
     providerWaitingFor: currentProviderUuid || '00000000-0000-0000-0000-000000000000',
   });
 
-  const myPatientsCount = queueEntries.length;
-
   return (
-    <MetricsCard>
-      <MetricsCardHeader title={t('myPatientsTile', 'My patients')} />
-      <MetricsCardBody>
-        <MetricsCardItem label={t('patients', 'Patients')} value={isLoading ? '--' : myPatientsCount} />
-      </MetricsCardBody>
-    </MetricsCard>
+    <MetricsCard
+      icon={<User size={20} />}
+      value={isLoading ? '--' : queueEntries.length}
+      label={t('myPatients', 'My Patients')}
+    />
   );
 }

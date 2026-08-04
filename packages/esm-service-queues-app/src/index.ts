@@ -78,6 +78,11 @@ export const metricsCardMyPatients = getAsyncLifecycle(
   options,
 );
 
+export const metricsCardAdmittedPatients = getAsyncLifecycle(
+  () => import('./metrics/metrics-cards/admitted-patients.extension'),
+  options,
+);
+
 export const callQueueEntryModal = getAsyncLifecycle(() => import('./modals/call-modal/call-queue-entry.modal'), {
   featureName: 'call queue entry',
   moduleName,

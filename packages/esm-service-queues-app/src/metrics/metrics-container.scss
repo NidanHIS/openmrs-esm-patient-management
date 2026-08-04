@@ -3,10 +3,13 @@
 
 .cardContainer {
   background-color: $ui-02;
-  display: grid;
-  padding: layout.$spacing-03;
-  gap: layout.$spacing-03;
-  // A premium 6-card or multi-card layout using CSS Grid that auto-adjusts based on viewport width
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-  align-items: stretch;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0 layout.$spacing-05;
+  border-bottom: 1px solid $ui-03;
+  min-height: 3rem;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  gap: 0;
 }

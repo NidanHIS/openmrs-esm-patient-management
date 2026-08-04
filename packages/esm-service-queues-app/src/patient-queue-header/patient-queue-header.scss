@@ -7,7 +7,15 @@
   border-block: 1px solid $ui-03;
   display: flex;
   justify-content: space-between;
+  padding-block: layout.$spacing-03;
   padding-right: layout.$spacing-03;
+  min-height: unset;
+
+  // Tighten the PageHeaderContent pictogram + title area
+  :global(.omrs-page-header-illustration) {
+    width: 2rem;
+    height: 2rem;
+  }
 }
 
 .dropdownSkeletonContainer {
@@ -41,13 +49,16 @@ html[dir='rtl'] {
   .date-and-location {
     margin-right: unset;
     margin-left: layout.$spacing-05;
-    & > svg:first-child {
+
+    &>svg:first-child {
       order: -1;
     }
-    & > svg:nth-child(4) {
+
+    &>svg:nth-child(4) {
       order: 1;
     }
-    & > span:nth-child(2) {
+
+    &>span:nth-child(2) {
       order: -2;
     }
   }

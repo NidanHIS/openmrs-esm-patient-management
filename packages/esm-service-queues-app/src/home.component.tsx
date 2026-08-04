@@ -4,34 +4,39 @@ import { useTranslation } from 'react-i18next';
 import PatientQueueHeader from './patient-queue-header/patient-queue-header.component';
 import ClinicMetrics from './metrics/metrics-container.component';
 import DefaultQueueTable from './queue-table/default-queue-table.component';
-import styles from './queue-table/queue-table.scss';
+import AdmittedPatientsTable from './admitted-patients/admitted-patients-table.component';
+import styles from './home.scss';
 
 const Home: React.FC = () => {
   const { t } = useTranslation();
 
   return (
-    <>
+    <div className={styles.homeContainer}>
       <PatientQueueHeader showFilters />
       <ClinicMetrics />
       <Tabs defaultSelectedIndex={2}>
-        <TabList className={styles.tabList} aria-label={t('patientQueueTabs', 'Patient Queue Tabs')} contained>
-          <Tab>{t('activePatient', 'Active patient')}</Tab>
-          <Tab>{t('todaysPatient', "Today's patient")}</Tab>
-          <Tab>{t('myPatient', 'My Patient')}</Tab>
+        <TabList className={styles.tabList} aria-label={t('patientQueueTabs', 'Patient Queue Tabs')}>
+          <Tab>{t('activePatients', 'Active patients')}</Tab>
+          <Tab>{t('todaysPatients', "Today's patients")}</Tab>
+          <Tab>{t('myPatients', 'My patients')}</Tab>
+          <Tab>{t('admittedPatients', 'Admitted patients')}</Tab>
         </TabList>
         <TabPanels>
-          <TabPanel>
+          <TabPanel className={styles.tabPanel}>
             <DefaultQueueTable filterType="active" />
           </TabPanel>
-          <TabPanel>
+          <TabPanel className={styles.tabPanel}>
             <DefaultQueueTable filterType="today" />
           </TabPanel>
-          <TabPanel>
+          <TabPanel className={styles.tabPanel}>
             <DefaultQueueTable filterType="my-patients" />
+          </TabPanel>
+          <TabPanel className={styles.tabPanel}>
+            <AdmittedPatientsTable />
           </TabPanel>
         </TabPanels>
       </Tabs>
-    </>
+    </div>
   );
 };
 

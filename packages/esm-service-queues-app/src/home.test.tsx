@@ -45,7 +45,7 @@ describe('Home Component', () => {
     render(<Home />);
 
     expect(screen.getByRole('heading', { name: /my patients/i })).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: /show patients with status/i })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /Status/i })).toBeInTheDocument();
     expect(screen.getByRole('search', { name: /search this list/i })).toBeInTheDocument();
     expect(screen.getByRole('table', { name: /queue table/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /clear queue entries/i })).not.toBeInTheDocument();

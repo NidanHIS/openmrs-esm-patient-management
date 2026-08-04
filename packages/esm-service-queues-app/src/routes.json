@@ -103,6 +103,12 @@
       "order": 6
     },
     {
+      "name": "metrics-card-admitted-patients",
+      "component": "metricsCardAdmittedPatients",
+      "slot": "service-queues-metrics-slot",
+      "order": 7
+    },
+    {
       "name": "queue-screen-link",
       "component": "queueScreenLink",
       "slot": "app-menu-slot",

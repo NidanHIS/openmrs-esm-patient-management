@@ -4,7 +4,7 @@
 @use '@openmrs/esm-styleguide/src/vars' as *;
 
 .defaultQueueTable {
-  margin: layout.$spacing-04 layout.$spacing-05;
+  margin: 0;
 }
 
 .container {
@@ -12,15 +12,31 @@
 }
 
 .tableSection {
-  background: colors.$gray-10;
-  padding-bottom: layout.$spacing-04;
+  background: transparent;
+  padding-bottom: 0;
+}
+
+.tableFilters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: layout.$spacing-05;
+}
+
+.filterActionsGroup {
+  display: flex;
+  align-items: center;
+  gap: layout.$spacing-04;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .headerContainer {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-  padding: layout.$spacing-04 layout.$spacing-05;
+  padding: layout.$spacing-03 layout.$spacing-05;
   background-color: colors.$gray-10;
 }
 
@@ -45,21 +61,73 @@
 }
 
 .filterContainer {
+  display: flex;
+  align-items: center;
+
   :global(.cds--dropdown__wrapper--inline) {
-    gap: 0;
+    display: flex;
+    align-items: center;
+    gap: layout.$spacing-03;
+
+    label {
+      font-size: 0.875rem;
+      color: $text-02;
+      font-weight: 500;
+      white-space: nowrap;
+      margin: 0;
+    }
+  }
+
+  :global(.cds--dropdown--inline) {
+    background-color: $ui-01;
+    border: 1px solid colors.$gray-30;
+    border-radius: 4px;
+    height: 2.25rem;
+    display: flex;
+    align-items: center;
+  }
+
+  :global(.cds--list-box__field) {
+    height: 100%;
+    display: flex;
+    align-items: center;
   }
 
   :global(.cds--list-box__menu-icon) {
-    height: layout.$spacing-05;
+    height: 100%;
+    display: flex;
+    align-items: center;
   }
 }
 
 .search {
-  max-width: 20rem;
-  display: inline;
+  max-width: 22rem;
+  width: 100%;
+  margin: 0;
 
-  input {
-    background-color: $ui-02 !important;
+  :global(.cds--search-input) {
+    background-color: $ui-01 !important;
+    border: 1px solid colors.$gray-30;
+    border-radius: 4px;
+    height: 2.25rem;
+    font-size: 0.875rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:focus,
+    &:focus-visible {
+      outline: none !important;
+      border-color: var(--brand-01, #0f62fe) !important;
+      box-shadow: 0 0 0 2px rgba(15, 98, 254, 0.15) !important;
+    }
+  }
+
+  :global(.cds--search-magnifier) {
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  :global(.cds--search-close) {
+    height: 2.25rem;
   }
 }
 
@@ -77,8 +145,12 @@
 }
 
 .tableContainer {
-  background-color: colors.$gray-10;
-  padding: 0 layout.$spacing-05;
+  background-color: $ui-01;
+  border: 1px solid $ui-03;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  padding: 0;
 
   a {
     text-decoration: none;
@@ -93,33 +165,106 @@
   }
 
   :global(.cds--data-table) {
-    background-color: $ui-03;
+    background-color: $ui-01;
   }
 
   .toolbarContainer {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    width: 100%;
+    min-height: 3.5rem;
   }
 
   .toolbarContent {
     display: flex;
     z-index: 1;
-    column-gap: layout.$spacing-03;
+    justify-content: flex-start;
     align-items: center;
+    width: 100%;
+    padding: 0;
   }
 
   :global(.cds--table-toolbar) {
-    flex: 3;
     position: static;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    min-height: 3.5rem;
+    padding: layout.$spacing-03 layout.$spacing-05;
     overflow: visible;
+    background-color: $ui-01;
+    border-bottom: 1px solid $ui-03;
+  }
+}
+
+.addPatientButton {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+
+  :global(.cds--btn) {
+    height: 2.25rem;
+    min-height: 2.25rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding-left: layout.$spacing-04;
+    padding-right: 2.5rem;
+    position: relative;
+    white-space: nowrap;
+
+    :global(.cds--btn__icon),
+    svg {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+    }
   }
 }
 
 // The main queue table — compact density with subtle row separation
 .queueTable {
-  :global(.cds--data-table) tbody tr td {
-    vertical-align: middle;
+  :global(.cds--data-table) {
+    background-color: $ui-01;
+
+    thead th {
+      background-color: colors.$gray-10 !important;
+      color: colors.$gray-70;
+      border-bottom: 1px solid colors.$gray-30;
+      font-size: 0.75rem;
+      letter-spacing: 0.03em;
+
+      :global(.cds--table-header-label) {
+        font-weight: 600;
+      }
+    }
+
+    tbody tr {
+      background-color: $ui-01 !important;
+      border-bottom: 1px solid colors.$gray-20;
+      transition: background-color 0.15s ease;
+
+      &:hover {
+        background-color: colors.$gray-10 !important;
+      }
+
+      td {
+        vertical-align: middle;
+        font-size: 0.875rem;
+
+        a {
+          font-weight: 600;
+          color: var(--brand-01, #0f62fe);
+          text-decoration: none;
+
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+    }
   }
 
   // Sticky last column (actions)
@@ -164,13 +309,13 @@
   td {
     padding: layout.$spacing-03;
 
-    > div {
+    >div {
       max-height: max-content !important;
       background-color: $ui-02;
     }
   }
 
-  th[colspan] td[colspan] > div:first-child {
+  th[colspan] td[colspan]>div:first-child {
     padding: 0 layout.$spacing-05;
   }
 }
@@ -182,20 +327,25 @@ html[dir='rtl'] {
       margin-left: 0;
       margin-right: layout.$spacing-03;
     }
+
     h2 {
       text-align: right;
     }
   }
+
   .tableContainer {
-    th > div {
+    th>div {
       text-align: right;
     }
+
     td {
       text-align: right;
+
       .serviceColor {
         margin-right: 0;
         margin-left: layout.$spacing-03;
       }
+
       button {
         padding: layout.$spacing-03 0 layout.$spacing-03 layout.$spacing-05;
         text-align: right;
@@ -204,16 +354,11 @@ html[dir='rtl'] {
   }
 }
 
-.tabList {
-  padding-left: layout.$spacing-05;
-}
-
 // Empty state
 .tileContainer {
-  border-top: 1px solid $ui-03;
   padding: layout.$spacing-06 layout.$spacing-05;
-  background: white;
-  margin: 0 layout.$spacing-05;
+  background: $ui-01;
+  margin: 0;
 }
 
 .tile {
