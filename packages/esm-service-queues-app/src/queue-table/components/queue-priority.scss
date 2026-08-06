@@ -3,14 +3,24 @@
 @use '@openmrs/esm-styleguide/src/vars' as *;
 
 .tag {
-  margin: 0 layout.$spacing-02;
+  margin: 0 layout.$spacing-01;
   white-space: nowrap;
+  font-size: 0.75rem;
+  border-radius: 12px;
+  font-weight: 500;
+  padding: 2px 10px;
+  min-height: 1.5rem;
 }
 
 .bold {
-  font-weight: bold;
+  font-weight: 600;
 }
 
 .orange {
   background-color: colors.$orange-20;
+  color: colors.$orange-70;
+}
+
+.tooltip {
+  cursor: pointer;
 }

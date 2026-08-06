@@ -1,0 +1,71 @@
+@use '@carbon/colors';
+@use '@carbon/layout';
+@use '@carbon/type';
+@use '@openmrs/esm-styleguide/src/vars' as *;
+
+.homeContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: $ui-02;
+}
+
+.tabList {
+  margin: layout.$spacing-05 layout.$spacing-05 0 layout.$spacing-05;
+  background-color: $ui-01;
+  border: 1px solid colors.$gray-30;
+  border-bottom: 2px solid colors.$gray-30;
+  border-radius: 6px 6px 0 0;
+  display: flex;
+  width: auto;
+  padding: 0;
+
+  :global(.cds--tabs__nav-item) {
+    margin: 0;
+    position: relative;
+
+    // Vertical divider line between tab items
+    &:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 25%;
+      height: 50%;
+      width: 1px;
+      background-color: colors.$gray-30;
+      z-index: 1;
+    }
+  }
+
+  :global(.cds--tabs__nav-link) {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: colors.$gray-70;
+    padding-inline: layout.$spacing-06;
+    height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.15s ease;
+    border: none;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+    position: relative;
+
+    &:hover {
+      color: colors.$gray-100;
+      background-color: colors.$gray-10;
+    }
+  }
+
+  :global(.cds--tabs__nav-item--selected),
+  :global(.cds--tabs__nav-item--selected .cds--tabs__nav-link) {
+    font-weight: 600;
+    background-color: $ui-01 !important;
+    border-bottom: 3px solid #0f62fe !important;
+  }
+}
+
+// Add grey breathing room around the table card
+.tabPanel {
+  padding: layout.$spacing-05 !important;
+}

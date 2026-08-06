@@ -3,104 +3,94 @@
 @use '@carbon/colors';
 @use '@openmrs/esm-styleguide/src/vars' as *;
 
-.tileContainer {
-  border: 1px solid $ui-03;
-  min-height: 7.875rem;
-  height: 100%;
-  padding: layout.$spacing-05;
-}
-
-.tileHeader {
+// Each stat block in the horizontal strip
+.statItem {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: layout.$spacing-03;
-}
-
-.headerLabelContainer {
-  display: flex;
-  height: layout.$spacing-07;
-  align-items: center;
-
-  :global(.cds--dropdown__wrapper--inline) {
-    gap: 0;
-
-    label {
-      @include type.type-style('heading-compact-01');
-      color: $text-02;
-      margin-right: layout.$spacing-03;
-    }
-  }
-
-  :global(.cds--list-box__menu-icon) {
-    height: layout.$spacing-05;
-  }
-}
-
-.link {
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  color: $interactive-01;
-
-  svg {
-    margin-left: layout.$spacing-03;
-  }
-}
-
-.headerLabel {
-  @include type.type-style('heading-compact-01');
-  color: $text-02;
-}
-
-.metricsContainer {
-  display: flex;
-  gap: layout.$spacing-07;
-  align-items: stretch;
-  flex-wrap: wrap;
-}
-
-.metricItem {
-  display: inline-block;
-  flex-direction: column;
-}
-
-.metricLabel {
-  @include type.type-style('label-01');
-  color: $text-02;
-  margin-bottom: layout.$spacing-02;
-}
-
-.metricValue {
-  @include type.type-style('heading-04');
-  color: $ui-05;
-  margin: 0;
-}
-
-.mainItem {
-  margin-right: layout.$spacing-07;
-}
-
-.smallItem {
   flex-direction: row;
+  align-items: center;
+  gap: layout.$spacing-04;
+  padding: 0 layout.$spacing-06;
+  height: 3rem;
+  border-right: 1px solid $ui-03;
+  white-space: nowrap;
+  cursor: default;
+  flex-shrink: 0;
+
+  &:last-child {
+    border-right: none;
+  }
+
+  &:hover {
+    background: colors.$gray-10-hover;
+  }
 }
 
-.smallValue {
-  font-size: 1rem !important;
-  margin-top: layout.$spacing-02;
+// Carbon icon wrapper
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  color: $text-02;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+// Right side: value on top, label below
+.statContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+}
+
+.valueRow {
+  display: flex;
+  align-items: baseline;
+  gap: layout.$spacing-02;
+}
+
+.mainValue {
+  @include type.type-style('heading-03');
+  font-weight: 700;
+  color: $ui-05;
+  line-height: 1.1;
+}
+
+.subValue {
+  @include type.type-style('label-01');
+  font-weight: 600;
+  color: $text-02;
 }
 
 .red {
-  color: colors.$red-50;
+  color: colors.$red-50 !important;
 }
 
-// Overriding styles for RTL support
+.labelRow {
+  display: flex;
+  align-items: center;
+  gap: layout.$spacing-02;
+}
+
+.mainLabel {
+  @include type.type-style('label-01');
+  color: $text-02;
+  line-height: 1;
+}
+
+.subLabel {
+  @include type.type-style('label-01');
+  color: $text-02;
+  opacity: 0.7;
+}
+
+// RTL
 html[dir='rtl'] {
-  .link {
-    svg {
-      margin-right: layout.$spacing-03;
-      margin-left: unset;
-      transform: scale(-1, 1);
+  .statItem {
+    border-right: none;
+    border-left: 1px solid $ui-03;
+
+    &:last-child {
+      border-left: none;
     }
   }
 }

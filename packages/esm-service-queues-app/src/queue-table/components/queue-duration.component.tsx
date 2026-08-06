@@ -29,11 +29,11 @@ function DurationString({ startedAt, endedAt }: QueueDurationProps) {
   return (
     <span>
       {hours > 0
-        ? t('hourAndMinuteFormatted', '{{hours}} hour(s) and {{minutes}} minute(s)', {
+        ? t('durationHoursMinutes', '{{hours}}h {{minutes}}m', {
             hours,
             minutes,
           })
-        : t('minuteFormatted', '{{minutes}} minute(s)', { minutes })}
+        : t('durationMinutes', '{{minutes}}m', { minutes })}
     </span>
   );
 }
