@@ -77,7 +77,7 @@ describe('QueueScreen component', () => {
           room: 'Outpatient Consultation',
           ticketNumber: 'OUT-007',
           status: 'serving',
-          patientName: 'Deepak Sir',
+          patientName: 'Test Patient',
           isActive: true,
           sortWeight: 0,
         },
@@ -113,7 +113,7 @@ describe('QueueScreen component', () => {
     expect(queueCards).toHaveLength(3);
     expect(within(queueCards[0]).getByText('Now serving')).toBeInTheDocument();
     expect(within(queueCards[0]).getByText('OUT-007')).toBeInTheDocument();
-    expect(within(queueCards[0]).getByText('Deepak Sir')).toBeInTheDocument();
+    expect(within(queueCards[0]).getByText('Test Patient')).toBeInTheDocument();
     expect(within(queueCards[1]).getByText('Queue position 2')).toBeInTheDocument();
     expect(within(queueCards[1]).getByText('OUT-008')).toBeInTheDocument();
     expect(within(queueCards[1]).getByText('Patient Two')).toBeInTheDocument();
