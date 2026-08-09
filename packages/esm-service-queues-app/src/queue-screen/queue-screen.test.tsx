@@ -1,32 +1,42 @@
 import React from 'react';
 import { vi, describe, expect, test, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
+import { useConfig } from '@openmrs/esm-framework';
 import { useActiveTickets } from './useActiveTickets';
-import { updateSelectedQueueLocationName, updateSelectedQueueLocationUuid } from '../store/store';
+import { type ConfigObject } from '../config-schema';
+import {
+  updateSelectedQueueLocationName,
+  updateSelectedQueueLocationUuid,
+  updateSelectedService,
+} from '../store/store';
 import QueueScreen from './queue-screen.component';
 
 const mockUseActiveTickets = vi.mocked(useActiveTickets);
+const mockUseConfig = vi.mocked(useConfig<ConfigObject>);
 
 vi.mock('./useActiveTickets', () => ({
   useActiveTickets: vi.fn(),
 }));
 
 vi.mock('../hooks/useQueues', () => ({
-  useQueues: vi.fn(() => ({ queues: [] })),
-}));
-
-vi.mock('../create-queue-entry/hooks/useQueueLocations', () => ({
-  useQueueLocations: vi.fn(() => ({ queueLocations: [], isLoading: false, error: undefined })),
+  useQueues: vi.fn(() => ({ queues: [], isLoading: false, error: undefined })),
 }));
 
 describe('QueueScreen component', () => {
   beforeEach(() => {
+    mockUseConfig.mockReturnValue({ visitQueueNumberAttributeUuid: 'queue-number-attribute' } as ConfigObject);
     updateSelectedQueueLocationName('Room A');
     updateSelectedQueueLocationUuid('123');
+    updateSelectedService(null, 'All');
   });
 
   test('renders loading skeleton when data is loading', () => {
-    mockUseActiveTickets.mockReturnValue({ isLoading: true, activeTickets: [], error: undefined, mutate: vi.fn() });
+    mockUseActiveTickets.mockReturnValue({
+      isLoading: true,
+      queueLine: [],
+      error: undefined,
+      mutate: vi.fn(),
+    });
 
     render(<QueueScreen />);
 
@@ -37,7 +47,7 @@ describe('QueueScreen component', () => {
     mockUseActiveTickets.mockReturnValue({
       error: new Error('Error'),
       isLoading: false,
-      activeTickets: [],
+      queueLine: [],
       mutate: vi.fn(),
     });
 
@@ -48,7 +58,7 @@ describe('QueueScreen component', () => {
 
   test('renders empty state when there are no active tickets', () => {
     mockUseActiveTickets.mockReturnValue({
-      activeTickets: [],
+      queueLine: [],
       isLoading: false,
       error: undefined,
       mutate: vi.fn(),
@@ -59,13 +69,35 @@ describe('QueueScreen component', () => {
     expect(screen.getByText('No active tickets to display')).toBeInTheDocument();
   });
 
-  test('renders table with active tickets when data is loaded', () => {
+  test('renders all queued patients in queue order with the currently called patient first', () => {
     mockUseActiveTickets.mockReturnValue({
-      activeTickets: [
+      queueLine: [
         {
-          room: 'Room A',
-          ticketNumber: '123',
-          status: 'Pending',
+          id: 'entry-7',
+          room: 'Outpatient Consultation',
+          ticketNumber: 'OUT-007',
+          status: 'serving',
+          patientName: 'Deepak Sir',
+          isActive: true,
+          sortWeight: 0,
+        },
+        {
+          id: 'entry-8',
+          room: 'Outpatient Consultation',
+          ticketNumber: 'OUT-008',
+          status: 'Waiting',
+          patientName: 'Patient Two',
+          isActive: false,
+          sortWeight: 0,
+        },
+        {
+          id: 'entry-9',
+          room: 'Outpatient Consultation',
+          ticketNumber: 'OUT-009',
+          status: 'Waiting',
+          patientName: 'Patient Three',
+          isActive: false,
+          sortWeight: 0,
         },
       ],
       isLoading: false,
@@ -75,8 +107,22 @@ describe('QueueScreen component', () => {
 
     render(<QueueScreen />);
 
-    expect(screen.getByText('Room : Room A')).toBeInTheDocument();
-    expect(screen.getByText('Ticket number')).toBeInTheDocument();
-    expect(screen.getByText('123')).toBeInTheDocument();
+    const queueCards = screen.getAllByRole('listitem');
+
+    expect(screen.getByRole('list', { name: 'Patients in queue' })).toBeInTheDocument();
+    expect(queueCards).toHaveLength(3);
+    expect(within(queueCards[0]).getByText('Now serving')).toBeInTheDocument();
+    expect(within(queueCards[0]).getByText('OUT-007')).toBeInTheDocument();
+    expect(within(queueCards[0]).getByText('Deepak Sir')).toBeInTheDocument();
+    expect(within(queueCards[1]).getByText('Queue position 2')).toBeInTheDocument();
+    expect(within(queueCards[1]).getByText('OUT-008')).toBeInTheDocument();
+    expect(within(queueCards[1]).getByText('Patient Two')).toBeInTheDocument();
+    expect(within(queueCards[2]).getByText('Queue position 3')).toBeInTheDocument();
+    expect(within(queueCards[2]).getByText('OUT-009')).toBeInTheDocument();
+    expect(within(queueCards[2]).getByText('Patient Three')).toBeInTheDocument();
+    expect(mockUseActiveTickets).toHaveBeenCalledWith('queue-number-attribute', {
+      locationUuid: '123',
+      serviceUuid: null,
+    });
   });
 });

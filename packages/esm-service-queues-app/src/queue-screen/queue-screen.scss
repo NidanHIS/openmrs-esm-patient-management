@@ -24,33 +24,69 @@
 }
 
 .gridFlow {
-  display: flex;
-  flex-direction: row;
+  display: grid;
+  gap: layout.$spacing-06;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   padding: layout.$spacing-07;
-  flex-wrap: wrap;
 }
 
 .card {
-  border-radius: 0.9rem;
   border: 1px solid #343332;
-  margin: layout.$spacing-06;
+  border-radius: 0.9rem;
+  min-height: 20rem;
+  min-width: 0;
   padding: 1.3rem;
-  width: 30%;
   text-align: center;
-  justify-content: center;
+}
+
+@media (max-width: 82rem) {
+  .gridFlow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 42rem) {
+  .gridFlow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.activeCard {
+  border: 2px solid var(--cds-support-success);
+}
+
+.queuePosition,
+.patientLabel {
+  @include type.type-style('label-01');
+  color: var(--cds-text-secondary);
+}
+
+.queuePosition {
+  margin-bottom: layout.$spacing-04;
+  text-transform: uppercase;
+}
+
+.patientLabel {
+  margin-top: layout.$spacing-05;
+}
+
+.patientName {
+  @include type.type-style('heading-compact-02');
+  margin-bottom: layout.$spacing-05;
+  overflow-wrap: anywhere;
 }
 
 .header {
+  color: black;
   font-size: layout.$spacing-07;
   font-weight: bold;
-  color: black;
 }
 
 .headerBlinking {
+  animation: blinker 1s linear infinite;
+  color: red;
   font-size: layout.$spacing-07;
   font-weight: bold;
-  color: red;
-  animation: blinker 1s linear infinite;
 }
 
 @keyframes blinker {
