@@ -32,10 +32,11 @@ endpoint.
   to decide the location.
 - Put the currently called ticket first, then order the remaining patients by priority and arrival time.
 - Render four cards per desktop row, then wrap later patients onto the next row without horizontal scrolling.
+- Keep a visible success border on the currently called card even when the Carbon success-color variable is unavailable.
 - Refresh the data every three seconds.
-- Prepare the cleaned source as `10.0.2-nidan.6`. The last deployed build remains `10.0.2-nidan.5` until the later
-  shipping step. The frontend cache safeguards return a real 404 for missing JavaScript so browsers cannot mix chunks
-  from different builds.
+- Deploy the cleaned source as `10.0.2-nidan.6`. The frontend gives every federated module loader a per-start version
+  URL, revalidates loader files, and returns a real 404 for missing JavaScript so browsers cannot mix chunks from
+  different builds.
 
 ## Files intentionally changed
 
@@ -82,12 +83,13 @@ combines all queue locations. The grid reduces to two columns and then one colum
   deriving filters from queue definitions therefore prevents the missing IPD tag from hiding that queue.
 - Current live data contains four non-ended OPD entries and no IPD entry. Mixed-patient regression tests therefore
   validate IPD and All without mutating production patient data.
-- Existing `nidan.5` deployment: all 51 local import-map entrypoints and all 111 queue JavaScript assets returned
-  successfully. `nidan.6` is packed into the Docker source branch but is not deployed yet.
+- Current `nidan.6` deployment: all 51 import-map entrypoints, all 111 queue JavaScript assets, and all 3,362
+  JavaScript assets in the OpenMRS frontend returned successfully. The Nidan Core loader and its current `91.js`
+  chunk return JavaScript with HTTP 200; the obsolete `548.js` correctly returns HTTP 404.
+- The deployed queue CSS contains the four-column responsive grid and the active-card border fallback.
 - Full package suite: 110 tests passed; seven pre-existing tests in untouched home/table-duration files retain stale text
   and accessibility expectations and are not queue-screen runtime failures.
 - Backend recovery: healthy with the configured restart policy and stable at approximately 996 MiB during the final
   memory sample.
-- Final in-app-browser validation could not run because no in-app browser session was connected
-  (`Browser is not available: iab`). The `nidan.6` source was not deployed as requested, so its final visual click-through
-  remains part of the later shipping step.
+- Final in-app-browser click-through could not run because no browser session was connected. Runtime verification used
+  the healthy Docker services, deployed bundles, cache headers, import map, and HTTP asset audits instead.

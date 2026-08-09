@@ -52,7 +52,7 @@
 }
 
 .activeCard {
-  border: 2px solid var(--cds-support-success);
+  border: 2px solid var(--cds-support-success, #198038);
 }
 
 .queuePosition,
