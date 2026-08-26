@@ -109,6 +109,10 @@
     {
       "name": "batch-change-appointments-statuses-modal",
       "component": "batchChangeAppointmentStatusesModal"
+    },
+    {
+      "name": "adhoc-teleconsultation-modal",
+      "component": "adhocTeleconsultationModal"
     }
   ],
   "workspaceGroups2": [

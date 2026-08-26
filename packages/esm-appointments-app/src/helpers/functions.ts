@@ -1,6 +1,6 @@
 import dayjs, { type Dayjs } from 'dayjs';
 import { type TFunction } from 'i18next';
-import { launchWorkspace2, type Workspace2DefinitionProps } from '@openmrs/esm-framework';
+import { launchWorkspace2, showModal, type Workspace2DefinitionProps } from '@openmrs/esm-framework';
 import { AppointmentStatus } from '../types';
 import { appointmentsFormWorkspace } from '../constants';
 
@@ -70,6 +70,30 @@ export const launchCreateAppointmentForm = (t: TFunction<'translation', undefine
       ) {
         launchChildWorkspace(appointmentsFormWorkspace, {
           patientUuid: patient.id,
+        });
+      },
+    },
+    {
+      startVisitWorkspaceName: 'appointments-start-visit-workspace',
+    },
+  );
+};
+
+export const launchGenerateAdhocTeleconsultation = (t: TFunction<'translation', undefined>) => {
+  launchWorkspace2(
+    'appointments-patient-search-workspace',
+    {
+      initialQuery: '',
+      workspaceTitle: t('generateAdhocTeleconsultation', 'Generate Ad-hoc Teleconsultation'),
+      onPatientSelected(
+        patientUuid: string,
+        patient: fhir.Patient,
+        launchChildWorkspace: Workspace2DefinitionProps['launchChildWorkspace'],
+        closeWorkspace: Workspace2DefinitionProps['closeWorkspace'],
+      ) {
+        const dispose = showModal('adhoc-teleconsultation-modal', {
+          patientUuid: patient.id,
+          closeModal: () => dispose(),
         });
       },
     },

@@ -1,10 +1,12 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import ReactDOM from 'react-dom';
 import classNames from 'classnames';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 dayjs.extend(utc);
 import { useTranslation } from 'react-i18next';
 import {
+  Button,
   DataTable,
   type DataTableHeader,
   Table,
@@ -15,9 +17,11 @@ import {
   TableHeader,
   TableRow,
 } from '@carbon/react';
+import { Video } from '@carbon/react/icons';
 import { formatDatetime, parseDate, Pagination, useLayoutType, usePagination } from '@openmrs/esm-framework';
 import { type Appointment } from '../types';
 import { PatientAppointmentsActionMenu } from './patient-appointments-action-menu.component';
+import TeleconsultationPip from '../appointments/common-components/teleconsultation-pip.component';
 import styles from './patient-appointments-table.scss';
 
 const pageSize = 10;
@@ -36,6 +40,7 @@ const PatientAppointmentsTable: React.FC<AppointmentTableProps> = ({
   setSwitchedView,
 }) => {
   const { t } = useTranslation();
+  const [pipSession, setPipSession] = useState<{ url: string; patientName?: string } | null>(null);
   const { results: paginatedAppointments, currentPage, goTo } = usePagination(patientAppointments, pageSize);
   const isTablet = useLayoutType() === 'tablet';
 
@@ -53,6 +58,7 @@ const PatientAppointmentsTable: React.FC<AppointmentTableProps> = ({
       { key: 'status', header: t('status', 'Status') },
       { key: 'type', header: t('type', 'Type') },
       { key: 'notes', header: t('notes', 'Notes') },
+      { key: 'teleconsultation', header: '' },
     ],
     [t],
   );
@@ -70,9 +76,23 @@ const PatientAppointmentsTable: React.FC<AppointmentTableProps> = ({
           status: appointment.status,
           type: appointment.appointmentKind ? appointment.appointmentKind : '——',
           notes: appointment.comments ? appointment.comments : '——',
+          teleconsultation: appointment.teleconsultationLink ? (
+            <Button
+              kind="ghost"
+              size="sm"
+              renderIcon={Video}
+              iconDescription={t('joinTeleconsultation', 'Join teleconsultation')}
+              onClick={() =>
+                setPipSession({
+                  url: appointment.teleconsultationLink,
+                })
+              }>
+              {t('joinTeleconsultation', 'Join teleconsultation')}
+            </Button>
+          ) : null,
         };
       }),
-    [paginatedAppointments],
+    [paginatedAppointments, t],
   );
 
   return (
@@ -121,6 +141,14 @@ const PatientAppointmentsTable: React.FC<AppointmentTableProps> = ({
         pageNumber={currentPage}
         pageSize={pageSize}
       />
+      {pipSession &&
+        ReactDOM.createPortal(
+          <TeleconsultationPip
+            url={pipSession.url}
+            onClose={() => setPipSession(null)}
+          />,
+          document.body,
+        )}
     </div>
   );
 };

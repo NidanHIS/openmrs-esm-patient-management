@@ -119,3 +119,8 @@ export const batchChangeAppointmentStatusesModal = getAsyncLifecycle(
   () => import('./appointments/common-components/batch-change-appointment-statuses.modal'),
   options,
 );
+
+export const adhocTeleconsultationModal = getAsyncLifecycle(
+  () => import('./appointments/common-components/adhoc-teleconsultation.modal'),
+  options,
+);

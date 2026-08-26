@@ -1,0 +1,171 @@
+// Teleconsultation Picture-in-Picture floating overlay
+@use '@carbon/colors';
+@use '@carbon/layout';
+@use '@carbon/type';
+
+// ── Base container ────────────────────────────────────────────────────────────
+.pipContainer {
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+  background: #0f0f0f;
+  transition:
+    box-shadow 0.2s ease,
+    border-radius 0.25s ease;
+  user-select: none;
+
+  // Subtle glass border on top
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, transparent 60%);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
+// ── Dragging state ────────────────────────────────────────────────────────────
+.dragging {
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.5),
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.12);
+  cursor: grabbing !important;
+}
+
+// ── Expanded (fullscreen-ish) mode ────────────────────────────────────────────
+.pipExpanded {
+  inset: 24px;
+  width: auto !important;
+  height: auto !important;
+  border-radius: 16px;
+}
+
+// ── Header / drag handle ──────────────────────────────────────────────────────
+.pipHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 layout.$spacing-03 0 layout.$spacing-05;
+  height: 44px;
+  min-height: 44px;
+  background: linear-gradient(135deg, #1a2332 0%, #0d1520 100%);
+  cursor: grab;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.pipTitle {
+  @include type.type-style('label-01');
+  color: colors.$gray-10;
+  display: flex;
+  align-items: center;
+  gap: layout.$spacing-02;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.pipTitleIcon {
+  fill: #4a9eff;
+  flex-shrink: 0;
+}
+
+.pipControls {
+  display: flex;
+  align-items: center;
+  gap: layout.$spacing-01;
+  flex-shrink: 0;
+
+  // Style Carbon ghost buttons for dark header
+  :global(.cds--btn--ghost) {
+    color: colors.$gray-30;
+    border-radius: 6px;
+
+    svg {
+      fill: colors.$gray-30;
+    }
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: colors.$white;
+
+      svg {
+        fill: colors.$white;
+      }
+    }
+  }
+}
+
+// ── Iframe ────────────────────────────────────────────────────────────────────
+.pipIframe {
+  flex: 1;
+  width: 100%;
+  border: none;
+  display: block;
+  background: #000;
+  min-height: 0;
+}
+
+// ── Resize handle (bottom-right corner) ──────────────────────────────────────
+.resizeHandle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  cursor: se-resize;
+  z-index: 1;
+
+  // Diagonal grip lines
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 1px;
+  }
+
+  &::before {
+    width: 10px;
+    height: 2px;
+    bottom: 7px;
+    right: 4px;
+    transform: rotate(-45deg);
+    box-shadow: 0 -4px 0 rgba(255, 255, 255, 0.25);
+  }
+
+  &::after {
+    width: 6px;
+    height: 2px;
+    bottom: 4px;
+    right: 4px;
+    transform: rotate(-45deg);
+  }
+
+  &:hover::before,
+  &:hover::after {
+    background: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 -4px 0 rgba(255, 255, 255, 0.5);
+  }
+}
