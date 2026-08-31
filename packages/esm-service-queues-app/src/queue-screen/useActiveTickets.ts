@@ -4,7 +4,7 @@ import useSWR from 'swr';
 const activeTicketsUrl = `${restBaseUrl}/queueutil/active-tickets`;
 const queueEntriesUrl = `${restBaseUrl}/queue-entry`;
 const queueEntryRepresentation =
-  'custom:(uuid,display,sortWeight,startedAt,status:(display),queue:(name,location:(uuid),service:(uuid)),patient:(person:(display,preferredName:(display))),visit:(attributes:(value,voided,dateCreated,attributeType:(uuid))))';
+  'custom:(uuid,sortWeight,startedAt,status:(display),queue:(name,location:(uuid),service:(uuid)),visit:(attributes:(value,voided,dateCreated,attributeType:(uuid))))';
 
 type ActiveTicket = {
   status: string;
@@ -13,7 +13,6 @@ type ActiveTicket = {
 
 type QueueEntry = {
   uuid?: string;
-  display?: string;
   sortWeight?: number;
   startedAt?: string;
   status?: { display?: string };
@@ -21,12 +20,6 @@ type QueueEntry = {
     name?: string;
     location?: { uuid?: string };
     service?: { uuid?: string };
-  };
-  patient?: {
-    person?: {
-      display?: string;
-      preferredName?: { display?: string };
-    };
   };
   visit?: {
     attributes?: Array<{
@@ -43,7 +36,6 @@ export type QueueLineTicket = {
   room: string;
   ticketNumber: string;
   status: string;
-  patientName: string;
   isActive: boolean;
   startedAt?: string;
   sortWeight: number;
@@ -133,11 +125,6 @@ export const buildQueueLine = (
         room,
         ticketNumber,
         status: activeTicket?.status ?? entry.status?.display ?? '',
-        patientName:
-          entry.patient?.person?.preferredName?.display?.trim() ||
-          entry.patient?.person?.display?.trim() ||
-          entry.display?.trim() ||
-          '',
         isActive: Boolean(activeTicket),
         startedAt: entry.startedAt,
         sortWeight: Number(entry.sortWeight) || 0,
