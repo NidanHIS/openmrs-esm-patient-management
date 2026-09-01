@@ -4,11 +4,15 @@ import useSWR from 'swr';
 const activeTicketsUrl = `${restBaseUrl}/queueutil/active-tickets`;
 const queueEntriesUrl = `${restBaseUrl}/queue-entry`;
 const queueEntryRepresentation =
-  'custom:(uuid,sortWeight,startedAt,status:(display),queue:(name,location:(uuid),service:(uuid)),visit:(attributes:(value,voided,dateCreated,attributeType:(uuid))))';
+  'custom:(uuid,sortWeight,startedAt,status:(display),queue:(uuid,name,location:(uuid),service:(uuid)),visit:(attributes:(value,voided,dateCreated,attributeType:(uuid))))';
 
 type ActiveTicket = {
-  status: string;
-  ticketNumber: string;
+  status?: string;
+  ticketNumber?: string;
+  queueEntryUuid?: string;
+  queueUuid?: string;
+  locationUuid?: string;
+  serviceUuid?: string;
 };
 
 type QueueEntry = {
@@ -17,6 +21,7 @@ type QueueEntry = {
   startedAt?: string;
   status?: { display?: string };
   queue?: {
+    uuid?: string;
     name?: string;
     location?: { uuid?: string };
     service?: { uuid?: string };
@@ -48,17 +53,51 @@ export type QueueFilters = {
 
 const normalize = (value?: string | number) => value?.toString().trim().toLowerCase() ?? '';
 
-const getTicketNumber = (entry: QueueEntry, attributeTypeUuid: string | null) =>
-  (entry.visit?.attributes ?? [])
-    .filter(
-      (attribute) =>
-        !attribute.voided &&
-        attribute.attributeType?.uuid === attributeTypeUuid &&
-        Boolean(attribute.value?.toString().trim()),
-    )
-    .sort((left, right) => (Date.parse(right.dateCreated ?? '') || 0) - (Date.parse(left.dateCreated ?? '') || 0))[0]
-    ?.value?.toString()
-    .trim() ?? '';
+const getTicketNumber = (entry: QueueEntry, attributeTypeUuid: string | null) => {
+  const normalizedAttributeTypeUuid = normalize(attributeTypeUuid ?? undefined);
+  if (!normalizedAttributeTypeUuid) {
+    return '';
+  }
+
+  return (
+    (entry.visit?.attributes ?? [])
+      .filter(
+        (attribute) =>
+          !attribute.voided &&
+          normalize(attribute.attributeType?.uuid) === normalizedAttributeTypeUuid &&
+          Boolean(attribute.value?.toString().trim()),
+      )
+      .sort((left, right) => (Date.parse(right.dateCreated ?? '') || 0) - (Date.parse(left.dateCreated ?? '') || 0))[0]
+      ?.value?.toString()
+      .trim() ?? ''
+  );
+};
+
+const matchesActiveTicket = (
+  activeKey: string,
+  activeTicket: ActiveTicket,
+  entry: QueueEntry,
+  ticketNumber: string,
+) => {
+  if (!normalize(ticketNumber) || normalize(activeTicket.ticketNumber) !== normalize(ticketNumber)) {
+    return false;
+  }
+
+  const identifiers = [
+    [activeTicket.queueEntryUuid, entry.uuid],
+    [activeTicket.queueUuid, entry.queue?.uuid],
+    [activeTicket.locationUuid, entry.queue?.location?.uuid],
+    [activeTicket.serviceUuid, entry.queue?.service?.uuid],
+  ].filter(([activeIdentifier]) => Boolean(normalize(activeIdentifier)));
+
+  if (identifiers.length) {
+    return identifiers.every(
+      ([activeIdentifier, entryIdentifier]) => normalize(activeIdentifier) === normalize(entryIdentifier),
+    );
+  }
+
+  return normalize(activeKey) === normalize(entry.queue?.uuid) || normalize(activeKey) === normalize(entry.queue?.name);
+};
 
 const fetchQueueData = async () => {
   const requestOptions = {
@@ -90,12 +129,15 @@ const fetchQueueData = async () => {
     return entries;
   };
   const [activeTicketsResponse, queueEntriesResponse] = await Promise.all([
-    openmrsFetch<Record<string, ActiveTicket>>(`${activeTicketsUrl}?_ts=${Date.now()}`, requestOptions),
+    openmrsFetch<Record<string, ActiveTicket>>(`${activeTicketsUrl}?_ts=${Date.now()}`, requestOptions).catch(
+      () => null,
+    ),
     fetchQueueEntries(),
   ]);
+  const activeTickets = activeTicketsResponse?.data;
 
   return {
-    activeTickets: activeTicketsResponse.data ?? {},
+    activeTickets: activeTickets && !Array.isArray(activeTickets) ? activeTickets : {},
     queueEntries: queueEntriesResponse,
   };
 };
@@ -105,8 +147,11 @@ export const buildQueueLine = (
   queueEntries: Array<QueueEntry>,
   attributeTypeUuid: string | null,
   filters: QueueFilters,
-): Array<QueueLineTicket> =>
-  queueEntries
+): Array<QueueLineTicket> => {
+  const activeTicketEntries = Object.entries(activeTickets);
+  const consumedActiveTickets = new Set<number>();
+
+  return queueEntries
     .filter(
       (entry) =>
         (!filters.locationUuid || entry.queue?.location?.uuid === filters.locationUuid) &&
@@ -115,10 +160,14 @@ export const buildQueueLine = (
     .map((entry) => {
       const ticketNumber = getTicketNumber(entry, attributeTypeUuid);
       const room = entry.queue?.name?.trim() ?? '';
-      const activeTicket = Object.entries(activeTickets).find(
-        ([activeRoom, ticket]) =>
-          normalize(activeRoom) === normalize(room) && normalize(ticket.ticketNumber) === normalize(ticketNumber),
-      )?.[1];
+      const activeTicketIndex = activeTicketEntries.findIndex(
+        ([activeKey, activeTicket], index) =>
+          !consumedActiveTickets.has(index) && matchesActiveTicket(activeKey, activeTicket, entry, ticketNumber),
+      );
+      const activeTicket = activeTicketIndex >= 0 ? activeTicketEntries[activeTicketIndex][1] : undefined;
+      if (activeTicketIndex >= 0) {
+        consumedActiveTickets.add(activeTicketIndex);
+      }
 
       return {
         id: entry.uuid ?? `${room}-${ticketNumber}`,
@@ -140,6 +189,7 @@ export const buildQueueLine = (
         (Date.parse(left.startedAt ?? '') || 0) - (Date.parse(right.startedAt ?? '') || 0)
       );
     });
+};
 
 export const useActiveTickets = (attributeTypeUuid: string | null, filters: QueueFilters = {}) => {
   const { data, isLoading, error, mutate } = useSWR(queueEntriesUrl, fetchQueueData, { refreshInterval: 3000 });

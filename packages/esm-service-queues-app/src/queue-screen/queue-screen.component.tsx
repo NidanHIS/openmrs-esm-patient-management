@@ -43,7 +43,9 @@ const QueueScreen: React.FC = () => {
                   : t('queuePosition', 'Queue position {{position}}', { position: index + 1 })}
               </p>
               <p className={styles.subheader}>{t('ticketNumber', 'Ticket number')}</p>
-              <p className={row.status === 'calling' ? styles.headerBlinking : styles.header}>{row.ticketNumber}</p>
+              <p className={row.status.trim().toLowerCase() === 'calling' ? styles.headerBlinking : styles.header}>
+                {row.ticketNumber}
+              </p>
               <p className={styles.subheader}>
                 {t('room', 'Room')} &nbsp; : &nbsp; {row.room}
               </p>
