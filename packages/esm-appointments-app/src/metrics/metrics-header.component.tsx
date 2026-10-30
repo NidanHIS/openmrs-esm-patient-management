@@ -7,7 +7,7 @@ import { Button } from '@carbon/react';
 import { isDesktop, navigate, useLayoutType } from '@openmrs/esm-framework';
 import { spaHomePage } from '../constants';
 import styles from './metrics-header.scss';
-import { launchCreateAppointmentForm } from '../helpers';
+import { launchCreateAppointmentForm, launchGenerateAdhocTeleconsultation } from '../helpers';
 import { useSelectedDate } from '../hooks/useSelectedDate';
 
 dayjs.extend(isToday);
@@ -21,6 +21,12 @@ const MetricsHeader: React.FC = () => {
   return (
     <div className={styles.metricsContainer}>
       <div className={styles.metricsContent}>
+        <Button
+          kind="secondary"
+          size={responsiveSize}
+          onClick={() => launchGenerateAdhocTeleconsultation(t)}>
+          {t('generateAdhocLink', 'Generate Ad-hoc Link')}
+        </Button>
         <Button
           kind="tertiary"
           renderIcon={Calendar}

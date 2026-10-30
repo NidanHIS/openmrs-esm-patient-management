@@ -5,6 +5,7 @@ import utc from 'dayjs/plugin/utc';
 dayjs.extend(utc);
 import { useTranslation } from 'react-i18next';
 import {
+  Button,
   DataTable,
   type DataTableHeader,
   Table,
@@ -15,9 +16,11 @@ import {
   TableHeader,
   TableRow,
 } from '@carbon/react';
+import { Video } from '@carbon/react/icons';
 import { formatDatetime, parseDate, Pagination, useLayoutType, usePagination } from '@openmrs/esm-framework';
 import { type Appointment } from '../types';
 import { PatientAppointmentsActionMenu } from './patient-appointments-action-menu.component';
+import { openTeleconsultationPip } from '../appointments/common-components/teleconsultation-pip-manager';
 import styles from './patient-appointments-table.scss';
 
 const pageSize = 10;
@@ -53,6 +56,7 @@ const PatientAppointmentsTable: React.FC<AppointmentTableProps> = ({
       { key: 'status', header: t('status', 'Status') },
       { key: 'type', header: t('type', 'Type') },
       { key: 'notes', header: t('notes', 'Notes') },
+      { key: 'teleconsultation', header: '' },
     ],
     [t],
   );
@@ -70,9 +74,19 @@ const PatientAppointmentsTable: React.FC<AppointmentTableProps> = ({
           status: appointment.status,
           type: appointment.appointmentKind ? appointment.appointmentKind : '——',
           notes: appointment.comments ? appointment.comments : '——',
+          teleconsultation: appointment.teleconsultationLink ? (
+            <Button
+              kind="ghost"
+              size="sm"
+              renderIcon={Video}
+              iconDescription={t('joinTeleconsultation', 'Join teleconsultation')}
+              onClick={() => openTeleconsultationPip(appointment.teleconsultationLink)}>
+              {t('joinTeleconsultation', 'Join teleconsultation')}
+            </Button>
+          ) : null,
         };
       }),
-    [paginatedAppointments],
+    [paginatedAppointments, t],
   );
 
   return (

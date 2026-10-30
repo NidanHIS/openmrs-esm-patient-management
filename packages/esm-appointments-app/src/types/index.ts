@@ -127,6 +127,9 @@ export interface AppointmentPayload {
   appointmentNumber?: string;
   uuid?: string;
   providerUuid?: string | OpenmrsResource;
+  patientEmail?: string;
+  providerEmail?: string;
+  teleconsultationProvider?: string;
 }
 
 export interface AppointmentCountMap {

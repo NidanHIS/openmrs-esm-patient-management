@@ -24,6 +24,7 @@ import {
   SelectItem,
   Stack,
   TextArea,
+  TextInput,
   TimePicker,
   TimePickerSelect,
   Toggle,
@@ -42,11 +43,46 @@ import {
   usePatient,
   useSession,
   Workspace2,
+  openmrsFetch,
+  restBaseUrl,
   type Workspace2DefinitionProps,
   type FetchResponse,
 } from '@openmrs/esm-framework';
+import useSWR from 'swr';
 import { z } from 'zod';
 import { type ConfigObject } from '../config-schema';
+
+// ─── helpers: fetch person attributes for email prefill ──────────────────────
+
+interface PersonAttributeResponse {
+  person: {
+    attributes: Array<{
+      value: string;
+      attributeType: { display: string };
+    }>;
+  };
+}
+
+/** Returns the email string from a person attribute list, or undefined if absent. */
+function extractEmail(attributes: PersonAttributeResponse['person']['attributes']): string | undefined {
+  return attributes.find((a) => a.attributeType.display.toLowerCase() === 'email')?.value;
+}
+
+function usePatientEmail(patientUuid: string | undefined) {
+  const url = patientUuid
+    ? `${restBaseUrl}/patient/${patientUuid}?v=custom:(person:(attributes))`
+    : null;
+  const { data } = useSWR<{ data: PersonAttributeResponse }>(url, openmrsFetch);
+  return data ? extractEmail(data.data?.person?.attributes ?? []) : undefined;
+}
+
+function useProviderEmail(providerUuid: string | undefined) {
+  const url = providerUuid
+    ? `${restBaseUrl}/provider/${providerUuid}?v=custom:(person:(attributes))`
+    : null;
+  const { data } = useSWR<{ data: PersonAttributeResponse }>(url, openmrsFetch);
+  return data ? extractEmail(data.data?.person?.attributes ?? []) : undefined;
+}
 import type { Appointment, AppointmentPayload, RecurringPattern } from '../types';
 import { checkAppointmentConflict, saveAppointment, saveRecurringAppointments } from './appointments-form.resource';
 import { useAppointmentServices } from '../hooks/useAppointmentService';
@@ -102,6 +138,9 @@ export const appointmentsFormSchema = z
     }),
     formIsRecurringAppointment: z.boolean(),
     dateAppointmentScheduled: z.date().optional(),
+    patientEmail: z.string().email().or(z.literal('')).optional(),
+    providerEmail: z.string().email().or(z.literal('')).optional(),
+    teleconsultationProvider: z.string().optional(),
   })
   .refine(
     (formValues) => {
@@ -193,6 +232,9 @@ const AppointmentsForm: React.FC<Workspace2DefinitionProps<AppointmentsFormProps
   const { appointmentStatuses, appointmentTypes, allowAllDayAppointments } = useConfig<ConfigObject>();
 
   const [isRecurringAppointment, setIsRecurringAppointment] = useState(false);
+  const [isTeleconsultation, setIsTeleconsultation] = useState(
+    appointment?.appointmentKind === 'Virtual',
+  );
   const defaultRecurringPatternType = recurringPattern?.type || 'DAY';
   const defaultRecurringPatternPeriod = recurringPattern?.period || 1;
   const defaultRecurringPatternDaysOfWeek = recurringPattern?.daysOfWeek || [];
@@ -264,10 +306,38 @@ const AppointmentsForm: React.FC<Workspace2DefinitionProps<AppointmentsFormProps
       formIsRecurringAppointment: isRecurringAppointment,
       dateAppointmentScheduled: defaultDateAppointmentScheduled,
       isAllDayAppointment: allowAllDayAppointments,
+      patientEmail: '',
+      providerEmail: '',
+      teleconsultationProvider: 'jitsi',
     },
   });
 
   useEffect(() => setValue('formIsRecurringAppointment', isRecurringAppointment), [isRecurringAppointment, setValue]);
+
+  // ── email prefill ────────────────────────────────────────────────────────
+  const watchedProviderUuid = watch('provider');
+  const patientEmailFromRecord = usePatientEmail(patientUuid);
+  const providerEmailFromRecord = useProviderEmail(watchedProviderUuid || undefined);
+
+  useEffect(() => {
+    if (isTeleconsultation) {
+      setValue('appointmentType', 'Virtual', { shouldValidate: true, shouldDirty: true });
+    }
+  }, [isTeleconsultation, setValue]);
+
+  // Prefill patient / provider email when teleconsultation is turned on and
+  // the API data has been fetched.
+  useEffect(() => {
+    if (!isTeleconsultation) return;
+    if (patientEmailFromRecord) {
+      setValue('patientEmail', patientEmailFromRecord, { shouldValidate: true });
+    }
+  }, [isTeleconsultation, patientEmailFromRecord, setValue]);
+
+  useEffect(() => {
+    if (!isTeleconsultation) return;
+    setValue('providerEmail', providerEmailFromRecord ?? '', { shouldValidate: true });
+  }, [isTeleconsultation, providerEmailFromRecord, setValue]);
 
   // Retrieve ref callback for appointmentDateTime (startDate & recurringPatternEndDate)
   const {
@@ -426,6 +496,9 @@ const AppointmentsForm: React.FC<Workspace2DefinitionProps<AppointmentsFormProps
       appointmentStatus,
       dateAppointmentScheduled,
       isAllDayAppointment,
+      patientEmail,
+      providerEmail,
+      teleconsultationProvider,
     } = data;
 
     const serviceUuid = serviceTypes?.find((service) => service.name === selectedService)?.uuid;
@@ -449,6 +522,7 @@ const AppointmentsForm: React.FC<Workspace2DefinitionProps<AppointmentsFormProps
       comments: appointmentNote,
       uuid: isEditing ? appointment.uuid : undefined,
       dateAppointmentScheduled: dayjs(dateAppointmentScheduled).format(),
+      ...(selectedAppointmentType === 'Virtual' ? { patientEmail, providerEmail, teleconsultationProvider } : {}),
     };
   };
 
@@ -572,7 +646,7 @@ const AppointmentsForm: React.FC<Workspace2DefinitionProps<AppointmentsFormProps
                 control={control}
                 render={({ field: { onBlur, onChange, value, ref } }) => (
                   <Select
-                    disabled={!appointmentTypes?.length}
+                    disabled={!appointmentTypes?.length || isTeleconsultation}
                     id="appointmentType"
                     invalid={!!errors?.appointmentType}
                     invalidText={errors?.appointmentType?.message}
@@ -590,6 +664,82 @@ const AppointmentsForm: React.FC<Workspace2DefinitionProps<AppointmentsFormProps
                 )}
               />
             </ResponsiveWrapper>
+          </FormGroup>
+
+          <FormGroup className={styles.formGroup} legendText={t('teleconsultation', 'Teleconsultation')}>
+            <div>
+              <Toggle
+                id="teleconsultationToggle"
+                labelA={t('no', 'No')}
+                labelB={t('yes', 'Yes')}
+                labelText={t('isTeleconsultation', 'Is this a teleconsultation?')}
+                toggled={isTeleconsultation}
+                onToggle={(checked) => {
+                  setIsTeleconsultation(checked);
+                  if (!checked) {
+                    setValue('appointmentType', appointmentTypes?.length === 1 ? appointmentTypes[0] : '', {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                    });
+                  }
+                }}
+              />
+              {isTeleconsultation && (
+                <div style={{ marginTop: '1rem' }}>
+                  <ResponsiveWrapper>
+                    <Controller
+                      name="teleconsultationProvider"
+                      control={control}
+                      render={({ field: { onChange, value } }) => (
+                        <RadioButtonGroup
+                          legendText={t('teleconsultationProvider', 'Provider')}
+                          name="teleconsultationProvider"
+                          onChange={(val) => onChange(val)}
+                          valueSelected={value}>
+                          <RadioButton labelText="Jitsi" value="jitsi" id="radioJitsi" />
+                          <RadioButton labelText="Zoom" value="zoom" id="radioZoom" />
+                        </RadioButtonGroup>
+                      )}
+                    />
+                  </ResponsiveWrapper>
+                  
+                  <div style={{ marginTop: '1rem' }}>
+                    <Stack gap={5}>
+                      <ResponsiveWrapper>
+                        <Controller
+                          name="patientEmail"
+                          control={control}
+                          render={({ field, fieldState }) => (
+                            <TextInput
+                              {...field}
+                              id="patientEmail"
+                              labelText={t('patientEmail', 'Patient Email')}
+                              invalid={!!fieldState?.error?.message}
+                              invalidText={fieldState?.error?.message}
+                            />
+                          )}
+                        />
+                      </ResponsiveWrapper>
+                      <ResponsiveWrapper>
+                        <Controller
+                          name="providerEmail"
+                          control={control}
+                          render={({ field, fieldState }) => (
+                            <TextInput
+                              {...field}
+                              id="providerEmail"
+                              labelText={t('providerEmail', 'Provider Email')}
+                              invalid={!!fieldState?.error?.message}
+                              invalidText={fieldState?.error?.message}
+                            />
+                          )}
+                        />
+                      </ResponsiveWrapper>
+                    </Stack>
+                  </div>
+                </div>
+              )}
+            </div>
           </FormGroup>
 
           <FormGroup className={styles.formGroup} legendText={t('recurringAppointment', 'Recurring Appointment')}>
