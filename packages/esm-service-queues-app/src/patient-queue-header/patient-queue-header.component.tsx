@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dropdown, DropdownSkeleton, InlineNotification, type OnChangeData } from '@carbon/react';
 import { useConfig, useSession, PageHeader, PageHeaderContent, ServiceQueuesPictogram } from '@openmrs/esm-framework';
-import { useQueueLocations } from '../create-queue-entry/hooks/useQueueLocations';
 import {
   updateSelectedQueueLocationUuid,
   updateSelectedQueueLocationName,
@@ -26,17 +25,26 @@ interface PatientQueueHeaderProps {
 
 const PatientQueueHeader: React.FC<PatientQueueHeaderProps> = ({ title, showFilters, actions }) => {
   const { t } = useTranslation();
-  const { queueLocations, isLoading, error } = useQueueLocations();
   const { dashboardTitle } = useConfig<ConfigObject>();
   const userSession = useSession();
-  const { selectedQueueLocationName, selectedQueueLocationUuid, selectedServiceDisplay } = useServiceQueuesStore();
-  const { queues } = useQueues();
+  const { selectedQueueLocationName, selectedQueueLocationUuid, selectedServiceDisplay, selectedServiceUuid } =
+    useServiceQueuesStore();
+  const { queues, isLoading, error } = useQueues();
   const hasInitializedDefaultLocation = useRef(false);
 
-  /**
-   * Remove invalid/null/undefined locations once
-   */
-  const validQueueLocations = useMemo(() => queueLocations.filter(Boolean), [queueLocations]);
+  const validQueueLocations = useMemo<Array<DropdownItem>>(() => {
+    const locations = new Map<string, string>();
+
+    queues.forEach((queue) => {
+      if (queue.location?.uuid) {
+        locations.set(queue.location.uuid, queue.location.display);
+      }
+    });
+
+    return Array.from(locations, ([id, name]) => ({ id, name })).sort((left, right) =>
+      left.name.localeCompare(right.name),
+    );
+  }, [queues]);
 
   /**
    * Match user's session location with available queue locations
@@ -48,27 +56,28 @@ const PatientQueueHeader: React.FC<PatientQueueHeaderProps> = ({ title, showFilt
 
   const showLocationDropdown = showFilters && validQueueLocations.length > 1;
 
-  const showServiceDropdown = showFilters && queues.length > 1;
+  const queuesForSelectedLocation = useMemo(
+    () =>
+      selectedQueueLocationUuid ? queues.filter((queue) => queue.location?.uuid === selectedQueueLocationUuid) : queues,
+    [queues, selectedQueueLocationUuid],
+  );
 
   /**
    * Build unique service options
    */
   const serviceOptions = useMemo(() => {
-    const options = queues
-      .map((queue) => ({
-        id: queue.service.uuid,
-        name: queue.service.display,
-      }))
-      .reduce<Array<DropdownItem>>((acc, curr) => {
-        if (!acc.some((option) => option.id === curr.id)) {
-          acc.push(curr);
-        }
+    const services = new Map<string, string>();
 
-        return acc;
-      }, []);
+    queuesForSelectedLocation.forEach((queue) => services.set(queue.service.uuid, queue.service.display));
 
-    return options.length !== 1 ? [{ id: 'all', name: t('all', 'All') }, ...options] : options;
-  }, [queues, t]);
+    const options = Array.from(services, ([id, name]) => ({ id, name })).sort((left, right) =>
+      left.name.localeCompare(right.name),
+    );
+
+    return options.length > 0 ? [{ id: 'all', name: t('all', 'All') }, ...options] : [];
+  }, [queuesForSelectedLocation, t]);
+
+  const showServiceDropdown = showFilters && serviceOptions.length > 1;
 
   /**
    * Handle queue location change
@@ -141,10 +150,15 @@ const PatientQueueHeader: React.FC<PatientQueueHeaderProps> = ({ title, showFilt
       return;
     }
 
-    /**
-     * Auto-select if only one location exists
-     */
-    if (!selectedQueueLocationUuid && validQueueLocations.length === 1) {
+    const selectedLocationIsValid = validQueueLocations.some((location) => location.id === selectedQueueLocationUuid);
+
+    if (selectedQueueLocationUuid && !selectedLocationIsValid) {
+      updateSelectedQueueLocationUuid(null);
+      updateSelectedQueueLocationName(null);
+      updateSelectedService(null, t('all', 'All'));
+    }
+
+    if (validQueueLocations.length === 1 && (!selectedQueueLocationUuid || !selectedLocationIsValid)) {
       handleQueueLocationChange({
         selectedItem: validQueueLocations[0],
       } as OnChangeData<DropdownItem>);
@@ -166,8 +180,22 @@ const PatientQueueHeader: React.FC<PatientQueueHeaderProps> = ({ title, showFilt
     isLoading,
     selectedQueueLocationUuid,
     sessionQueueLocation,
+    t,
     validQueueLocations,
   ]);
+
+  /**
+   * Clear a saved service that does not belong to the selected location.
+   */
+  useEffect(() => {
+    if (
+      !isLoading &&
+      selectedServiceUuid &&
+      !queuesForSelectedLocation.some((queue) => queue.service.uuid === selectedServiceUuid)
+    ) {
+      updateSelectedService(null, t('all', 'All'));
+    }
+  }, [isLoading, queuesForSelectedLocation, selectedServiceUuid, t]);
 
   return (
     <PageHeader className={styles.header} data-testid="patient-queue-header">
