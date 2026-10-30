@@ -43,11 +43,46 @@ import {
   usePatient,
   useSession,
   Workspace2,
+  openmrsFetch,
+  restBaseUrl,
   type Workspace2DefinitionProps,
   type FetchResponse,
 } from '@openmrs/esm-framework';
+import useSWR from 'swr';
 import { z } from 'zod';
 import { type ConfigObject } from '../config-schema';
+
+// ─── helpers: fetch person attributes for email prefill ──────────────────────
+
+interface PersonAttributeResponse {
+  person: {
+    attributes: Array<{
+      value: string;
+      attributeType: { display: string };
+    }>;
+  };
+}
+
+/** Returns the email string from a person attribute list, or undefined if absent. */
+function extractEmail(attributes: PersonAttributeResponse['person']['attributes']): string | undefined {
+  return attributes.find((a) => a.attributeType.display.toLowerCase() === 'email')?.value;
+}
+
+function usePatientEmail(patientUuid: string | undefined) {
+  const url = patientUuid
+    ? `${restBaseUrl}/patient/${patientUuid}?v=custom:(person:(attributes))`
+    : null;
+  const { data } = useSWR<{ data: PersonAttributeResponse }>(url, openmrsFetch);
+  return data ? extractEmail(data.data?.person?.attributes ?? []) : undefined;
+}
+
+function useProviderEmail(providerUuid: string | undefined) {
+  const url = providerUuid
+    ? `${restBaseUrl}/provider/${providerUuid}?v=custom:(person:(attributes))`
+    : null;
+  const { data } = useSWR<{ data: PersonAttributeResponse }>(url, openmrsFetch);
+  return data ? extractEmail(data.data?.person?.attributes ?? []) : undefined;
+}
 import type { Appointment, AppointmentPayload, RecurringPattern } from '../types';
 import { checkAppointmentConflict, saveAppointment, saveRecurringAppointments } from './appointments-form.resource';
 import { useAppointmentServices } from '../hooks/useAppointmentService';
@@ -279,11 +314,30 @@ const AppointmentsForm: React.FC<Workspace2DefinitionProps<AppointmentsFormProps
 
   useEffect(() => setValue('formIsRecurringAppointment', isRecurringAppointment), [isRecurringAppointment, setValue]);
 
+  // ── email prefill ────────────────────────────────────────────────────────
+  const watchedProviderUuid = watch('provider');
+  const patientEmailFromRecord = usePatientEmail(patientUuid);
+  const providerEmailFromRecord = useProviderEmail(watchedProviderUuid || undefined);
+
   useEffect(() => {
     if (isTeleconsultation) {
       setValue('appointmentType', 'Virtual', { shouldValidate: true, shouldDirty: true });
     }
   }, [isTeleconsultation, setValue]);
+
+  // Prefill patient / provider email when teleconsultation is turned on and
+  // the API data has been fetched.
+  useEffect(() => {
+    if (!isTeleconsultation) return;
+    if (patientEmailFromRecord) {
+      setValue('patientEmail', patientEmailFromRecord, { shouldValidate: true });
+    }
+  }, [isTeleconsultation, patientEmailFromRecord, setValue]);
+
+  useEffect(() => {
+    if (!isTeleconsultation) return;
+    setValue('providerEmail', providerEmailFromRecord ?? '', { shouldValidate: true });
+  }, [isTeleconsultation, providerEmailFromRecord, setValue]);
 
   // Retrieve ref callback for appointmentDateTime (startDate & recurringPatternEndDate)
   const {

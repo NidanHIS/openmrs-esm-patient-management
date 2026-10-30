@@ -18,7 +18,7 @@
   "devDependencies": {
     "@babel/core": "^7.11.6",
     "@carbon/react": "^1.83.0",
-    "@openmrs/esm-framework": "next",
+    "@openmrs/esm-framework": "10.0.0",
     "@playwright/test": "^1.53.2",
     "@swc/core": "^1.2.165",
     "@testing-library/dom": "^10.4.1",
@@ -53,7 +53,7 @@
     "identity-obj-proxy": "^3.0.0",
     "jsdom": "^28.0.0",
     "lint-staged": "^15.2.1",
-    "openmrs": "next",
+    "openmrs": "10.0.0",
     "prettier": "^3.1.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

@@ -127,31 +127,115 @@
   min-height: 0;
 }
 
-// ── Resize handle (bottom-right corner) ──────────────────────────────────────
+// ── Resize handles (all edges and corners) ───────────────────────────────────
 .resizeHandle {
   position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 20px;
-  height: 20px;
-  cursor: se-resize;
   z-index: 1;
 
-  // Diagonal grip lines
+  // Grip visual indicator (only on corners)
   &::before,
   &::after {
     content: '';
     position: absolute;
     background: rgba(255, 255, 255, 0.25);
     border-radius: 1px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
   }
+
+  &:hover::before,
+  &:hover::after {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.5);
+  }
+}
+
+// ── Corners ───────────────────────────────────────────────────────────────────
+.resizeTopLeft {
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  cursor: nw-resize;
+
+  &::before {
+    width: 10px;
+    height: 2px;
+    top: 7px;
+    left: 4px;
+    transform: rotate(45deg);
+  }
+
+  &::after {
+    width: 2px;
+    height: 10px;
+    top: 4px;
+    left: 7px;
+    transform: rotate(45deg);
+  }
+}
+
+.resizeTopRight {
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  cursor: ne-resize;
+
+  &::before {
+    width: 10px;
+    height: 2px;
+    top: 7px;
+    right: 4px;
+    transform: rotate(-45deg);
+  }
+
+  &::after {
+    width: 2px;
+    height: 10px;
+    top: 4px;
+    right: 7px;
+    transform: rotate(-45deg);
+  }
+}
+
+.resizeBottomLeft {
+  bottom: 0;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  cursor: sw-resize;
+
+  &::before {
+    width: 10px;
+    height: 2px;
+    bottom: 7px;
+    left: 4px;
+    transform: rotate(-45deg);
+  }
+
+  &::after {
+    width: 2px;
+    height: 10px;
+    bottom: 4px;
+    left: 7px;
+    transform: rotate(-45deg);
+  }
+}
+
+.resizeBottomRight {
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  cursor: se-resize;
 
   &::before {
     width: 10px;
     height: 2px;
     bottom: 7px;
     right: 4px;
-    transform: rotate(-45deg);
+    transform: rotate(45deg);
     box-shadow: 0 -4px 0 rgba(255, 255, 255, 0.25);
   }
 
@@ -160,12 +244,153 @@
     height: 2px;
     bottom: 4px;
     right: 4px;
-    transform: rotate(-45deg);
+    transform: rotate(45deg);
   }
 
-  &:hover::before,
-  &:hover::after {
-    background: rgba(255, 255, 255, 0.5);
+  &:hover::before {
     box-shadow: 0 -4px 0 rgba(255, 255, 255, 0.5);
   }
+}
+
+// ── Edges ─────────────────────────────────────────────────────────────────────
+.resizeTop {
+  top: 0;
+  left: 20px;
+  right: 20px;
+  height: 6px;
+  cursor: n-resize;
+
+  &::before,
+  &::after {
+    display: none;
+  }
+}
+
+.resizeBottom {
+  bottom: 0;
+  left: 20px;
+  right: 20px;
+  height: 6px;
+  cursor: s-resize;
+
+  &::before,
+  &::after {
+    display: none;
+  }
+}
+
+.resizeLeft {
+  left: 0;
+  top: 20px;
+  bottom: 20px;
+  width: 6px;
+  cursor: w-resize;
+
+  &::before,
+  &::after {
+    display: none;
+  }
+}
+
+.resizeRight {
+  right: 0;
+  top: 20px;
+  bottom: 20px;
+  width: 6px;
+  cursor: e-resize;
+
+  &::before,
+  &::after {
+    display: none;
+  }
+}
+
+// ── Zoom popup panel ──────────────────────────────────────────────────────────
+.zoomPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: layout.$spacing-06;
+  padding: layout.$spacing-07;
+  background: linear-gradient(160deg, #0d1b2a 0%, #0a0f1c 100%);
+  text-align: center;
+  user-select: none;
+}
+
+.zoomLogo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  background: rgba(45, 140, 255, 0.12);
+  border: 1px solid rgba(45, 140, 255, 0.25);
+  box-shadow:
+    0 0 0 8px rgba(45, 140, 255, 0.05),
+    0 4px 20px rgba(45, 140, 255, 0.2);
+
+  svg {
+    filter: drop-shadow(0 2px 8px rgba(45, 140, 255, 0.4));
+  }
+}
+
+.zoomInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: layout.$spacing-03;
+}
+
+.zoomMeetingId {
+  @include type.type-style('label-01');
+  color: colors.$gray-40;
+  margin: 0;
+
+  strong {
+    color: colors.$gray-10;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.08em;
+  }
+}
+
+.zoomPatient {
+  @include type.type-style('body-compact-01');
+  color: colors.$gray-30;
+  margin: 0;
+
+  strong {
+    color: colors.$gray-10;
+  }
+}
+
+.zoomActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: layout.$spacing-04;
+  width: 100%;
+  max-width: 260px;
+
+  // Make the button fill width and use Zoom's blue
+  :global(.cds--btn--primary) {
+    background-color: #2d8cff;
+    border-color: #2d8cff;
+    width: 100%;
+    justify-content: center;
+
+    &:hover {
+      background-color: #1a7fe0;
+      border-color: #1a7fe0;
+    }
+  }
+}
+
+.zoomNote {
+  @include type.type-style('helper-text-01');
+  color: colors.$gray-60;
+  margin: 0;
+  line-height: 1.5;
 }

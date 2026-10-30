@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import ReactDOM from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Button,
@@ -50,7 +49,7 @@ import AppointmentActions from './appointments-actions.component';
 import AppointmentDetails from '../details/appointment-details.component';
 import { useAppointmentsStore } from '../../store';
 import { useActiveVisits } from '../../hooks/useActiveVisits';
-import TeleconsultationPip from './teleconsultation-pip.component';
+import { openTeleconsultationPip } from './teleconsultation-pip-manager';
 import styles from './appointments-table.scss';
 
 interface AppointmentsTableProps {
@@ -63,7 +62,6 @@ const AppointmentsTable: React.FC<AppointmentsTableProps> = ({ appointments, isL
   const { t } = useTranslation();
   const [pageSize, setPageSize] = useState(25);
   const [searchString, setSearchString] = useState('');
-  const [pipSession, setPipSession] = useState<{ url: string; patientName: string } | null>(null);
   const { selectedAppointmentStatuses, setSelectedAppointmentStatuses } = useAppointmentsStore();
   const config = useConfig<ConfigObject>();
   const { appointmentsTableColumns } = config;
@@ -152,12 +150,7 @@ const AppointmentsTable: React.FC<AppointmentsTableProps> = ({ appointments, isL
               size="sm"
               renderIcon={Video}
               iconDescription={t('joinTeleconsultation', 'Join teleconsultation')}
-              onClick={() =>
-                setPipSession({
-                  url: appointment.teleconsultationLink,
-                  patientName: appointment.patient.name,
-                })
-              }>
+              onClick={() => openTeleconsultationPip(appointment.teleconsultationLink, appointment.patient.name)}>
               {t('joinTeleconsultation', 'Join teleconsultation')}
             </Button>
           ) : null,
@@ -351,15 +344,6 @@ const AppointmentsTable: React.FC<AppointmentsTableProps> = ({ appointments, isL
           )}
         </DataTable>
       </Layer>
-      {pipSession &&
-        ReactDOM.createPortal(
-          <TeleconsultationPip
-            url={pipSession.url}
-            patientName={pipSession.patientName}
-            onClose={() => setPipSession(null)}
-          />,
-          document.body,
-        )}
     </>
   );
 };
